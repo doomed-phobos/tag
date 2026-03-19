@@ -3,7 +3,7 @@ mod app;
 fn main() {
   let native_options = eframe::NativeOptions {
     centered: true,
-    viewport: eframe::egui::ViewportBuilder::default().with_inner_size([400.0, 400.0]),
+    viewport: eframe::egui::ViewportBuilder::default().with_inner_size([800.0, 400.0]),
     ..Default::default()
   };
   

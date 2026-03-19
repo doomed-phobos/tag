@@ -57,9 +57,15 @@ impl ArtistContainer {
         ui.heading(&self.name);
         ui.separator();
         ui.horizontal(|ui| {
-          /*if let Some(image_filename) = &self.image_filename {
-            ui.label(image_filename);
-          }*/
+          if let Some(tag) = self.tags.get(self.selected as usize) {
+            if let Some(filename) = &tag.image_filename {
+              ui.add(
+                egui::Image::new(format!("file://{filename}"))
+                  .texture_options(egui::TextureOptions::LINEAR.with_mipmap_mode(Some(egui::TextureFilter::Linear)))
+                  .fit_to_exact_size(egui::Vec2::splat(350.0))
+              );
+            }
+          }
           ui.separator();
 
           ui.vertical(|ui| {
@@ -127,7 +133,6 @@ impl ArtistContainer {
                 });
             });
           });
-
         });
       });
   }
