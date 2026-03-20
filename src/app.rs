@@ -1,32 +1,38 @@
-use eframe::egui;
-use crate::artist::{ArtistContainer, Tag};
+use std::{fs, io};
+
+use crate::database::Database;
 
 pub struct App {
-  artists: Vec<ArtistContainer>,
+  database: Database,
 }
 
 impl App {
-  pub fn new(cc: &eframe::CreationContext) -> Self {
+  pub fn try_new(cc: &eframe::CreationContext) -> Result<Self, io::Error> {
+    let project_dir = dirs::data_dir()
+      .ok_or(io::Error::new(io::ErrorKind::NotADirectory, "Data dir isn't found"))?
+      .join("tagger");
+    fs::create_dir_all(&project_dir)?;
+    let database = Database::try_load(project_dir)?;
+
     egui_extras::install_image_loaders(&cc.egui_ctx);
 
-    Self {
-      artists: vec![
-        ArtistContainer::new(
-          "anon 2-okuren",
-          vec![
-            Tag::new("Tag 1"),
-            Tag::new_with_image("Tag 2", "/home/ceres/Documents/tag/test.png"),
-            Tag::new_with_image("Tag 3", "/home/ceres/Documents/tag/test.webp"),
-            Tag::new("Tag 4"),
-          ]
-        ),
-      ],
-    }
+    Ok(Self {
+      database
+    })  
   }
 }
 
 impl eframe::App for App {
   fn update(&mut self, ctx: &eframe::egui::Context, frame: &mut eframe::Frame) {
+    
+  }
+
+  fn on_exit(&mut self, _gl: Option<&eframe::glow::Context>) {
+    self.database.save().unwrap();
+  }
+}
+
+/*
     egui::CentralPanel::default()
       .show(ctx, |ui| {
       
@@ -36,5 +42,5 @@ impl eframe::App for App {
         }
       });
     });
-  }
-}
+
+*/

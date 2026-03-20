@@ -1,5 +1,5 @@
 mod app;
-mod artist;
+mod database;
 
 fn main() {
   let native_options = eframe::NativeOptions {
@@ -11,6 +11,6 @@ fn main() {
   eframe::run_native(
     "Tagger",
     native_options,
-    Box::new(|cc| Ok(Box::new(app::App::new(cc))))
+    Box::new(|cc| Ok(Box::new(app::App::try_new(cc).unwrap())))
   ).expect("Failed to run app");
 }
