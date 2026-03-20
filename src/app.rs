@@ -1,9 +1,10 @@
 use std::{fs, io};
-
-use crate::database::Database;
+use eframe::egui;
+use crate::{database::Database, ui::AddArtistWindow};
 
 pub struct App {
   database: Database,
+  add_artist_window: AddArtistWindow,
 }
 
 impl App {
@@ -17,14 +18,23 @@ impl App {
     egui_extras::install_image_loaders(&cc.egui_ctx);
 
     Ok(Self {
-      database
+      database,
+      add_artist_window: AddArtistWindow::new(),
     })  
   }
 }
 
 impl eframe::App for App {
-  fn update(&mut self, ctx: &eframe::egui::Context, frame: &mut eframe::Frame) {
-    
+  fn update(&mut self, ctx: &eframe::egui::Context, _frame: &mut eframe::Frame) {
+    egui::CentralPanel::default()
+      .show(ctx, |ui| {
+
+      if ui.button("Click me!").clicked() {
+        self.add_artist_window.open = true;
+        // TODO: Add tags here!
+      }
+      self.add_artist_window.show(ctx);
+    }); 
   }
 
   fn on_exit(&mut self, _gl: Option<&eframe::glow::Context>) {
