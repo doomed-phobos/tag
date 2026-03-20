@@ -1,5 +1,6 @@
 mod app;
 mod database;
+mod ui;
 
 fn main() {
   let native_options = eframe::NativeOptions {
