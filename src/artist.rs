@@ -27,6 +27,7 @@ pub struct ArtistContainer {
   tags: Vec<Tag>,
   selected: i32,
   show_modal: bool,
+  thumbnail_filename: Option<String>
 }
 
 impl ArtistContainer {
@@ -39,6 +40,7 @@ impl ArtistContainer {
       tags,
       selected: -1,
       show_modal: false,
+      thumbnail_filename: None
     }
   }
 
@@ -67,18 +69,14 @@ impl ArtistContainer {
   }
 
   fn draw_image(&mut self, ui: &mut egui::Ui) {
-    if let Some(tag) = self.tags.get(self.selected as usize) {
-      if let Some(filename) = &tag.image_filename {
-        if ui.add(
-          egui::Image::new(format!("file://{filename}"))
+    if let Some(filename) = &self.thumbnail_filename {
+      ui.add(
+          egui::Image::new(filename)
             .texture_options(egui::TextureOptions::LINEAR.with_mipmap_mode(Some(egui::TextureFilter::Linear)))
             .fit_to_exact_size(egui::Vec2::splat(350.0))
-        ).clicked() {
-          self.show_modal = true;
-        }
+        );
 
-        ui.separator();
-      }
+      ui.separator();
     }
   }
 
@@ -88,18 +86,26 @@ impl ArtistContainer {
         ui.strong("Tags: ");
         ui.scope(|ui| {
           ui.spacing_mut().button_padding = Self::PADDING;
+
+          let ctx = ui.ctx().clone();
           Flex::horizontal()
             .width(ui.available_width())
             .wrap(true)
             .show(ui, |flex| {
               for (i, tag) in self.tags.iter().enumerate() {
-                let selected = i == self.selected as usize;
-                if tag.image_filename.is_some() {
+                let i = i as i32;
+                let selected = i == self.selected;
+                if let Some(new_filename) = &tag.image_filename {
                   if flex.add(item(), egui::Button::new(&tag.name)
                     .selected(selected)
-                    .corner_radius(Self::CORNER_RADIOUS)).clicked() && self.selected != i as i32 {
+                    .corner_radius(Self::CORNER_RADIOUS)).clicked() && !selected {
                     
-                    self.selected = i as i32;
+                    if let Some(prev_filename) = &self.thumbnail_filename {
+                      ctx.forget_image(prev_filename.as_str());
+                    }
+                    
+                    self.selected = i;
+                    self.thumbnail_filename = Some(format!("file://{new_filename}"));
                   }
                 } else {
                   // Simulated Non-Events Button
