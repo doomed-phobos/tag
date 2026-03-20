@@ -1,4 +1,5 @@
 mod app;
+mod artist;
 
 fn main() {
   let native_options = eframe::NativeOptions {
