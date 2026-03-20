@@ -1,12 +1,22 @@
 use xxhash_rust::xxh3;
-use std::{collections::HashMap, fs::OpenOptions, io::{self, Write}, path::{Path, PathBuf}};
+use std::{fs::OpenOptions, io::{self, Write}, path::{PathBuf}};
 use serde::{Deserialize, Serialize, de::{DeserializeOwned, Error}};
 
 pub struct NonEmptyString(String);
 
 impl NonEmptyString {
+  pub fn as_str(&self) -> &str {
+    self.0.as_str()
+  }
+
   pub fn as_bytes(&self) -> &[u8] {
     self.0.as_bytes()
+  }
+}
+
+impl ToString for NonEmptyString {
+  fn to_string(&self) -> String {
+    self.0.clone()
   }
 }
 
@@ -41,8 +51,8 @@ impl<'de> Deserialize<'de> for NonEmptyString {
 
 #[derive(Serialize, Deserialize)]
 pub struct Tag {
-  id: u64,
-  name: NonEmptyString,
+  pub id: u64,
+  pub name: NonEmptyString,
 }
 
 impl Tag {
@@ -78,14 +88,18 @@ impl Artist {
 }
 
 pub struct Database {
-  artists: HashMap<u64, Artist>,
-  tags: HashMap<u64, Tag>,
+  vec_artists: Vec<Artist>,
+  vec_tags: Vec<Tag>,
   path: PathBuf,
 }
 
 impl Database {
   const ARTIST_TABLE_NAME: &str = "artists";
   const TAG_TABLE_NAME: &str = "tags";
+
+  pub fn all_tags(&self) -> &Vec<Tag> {
+    &self.vec_tags
+  }
 
   fn load_table<T: DeserializeOwned>(path: PathBuf) -> Result<Vec<T>, io::Error> {
     if !path.exists() {
@@ -102,7 +116,7 @@ impl Database {
     Ok(data)
   }
 
-  fn save_table<T: Serialize>(values: Vec<&T>, path: PathBuf) -> Result<(), io::Error> {
+  fn save_table<T: Serialize>(values: &Vec<T>, path: PathBuf) -> Result<(), io::Error> {
     let mut file = OpenOptions::new()
       .create(true)
       .write(true)
@@ -118,19 +132,19 @@ impl Database {
   }
 
   pub fn try_load(path: PathBuf) -> Result<Self, io::Error> {
-    let artists = Self::load_table::<Artist>(path.join(Self::ARTIST_TABLE_NAME))?;
-    let tags = Self::load_table::<Tag>(path.join(Self::TAG_TABLE_NAME))?;
+    let vec_artists = Self::load_table::<Artist>(path.join(Self::ARTIST_TABLE_NAME))?;
+    let vec_tags = Self::load_table::<Tag>(path.join(Self::TAG_TABLE_NAME))?;
 
     Ok(Self {
       path,
-      artists: artists.into_iter().map(|x| (x.id, x)).collect(),
-      tags: tags.into_iter().map(|x| (x.id, x)).collect(),
+      vec_artists,
+      vec_tags
     })
   }
 
   pub fn save(&self) -> Result<(), io::Error> {
-    Self::save_table(self.artists.values().collect(), self.path.join(Self::ARTIST_TABLE_NAME))?;
-    Self::save_table(self.tags.values().collect(), self.path.join(Self::TAG_TABLE_NAME))?;
+    Self::save_table(&self.vec_artists, self.path.join(Self::ARTIST_TABLE_NAME))?;
+    Self::save_table(&self.vec_tags, self.path.join(Self::TAG_TABLE_NAME))?;
 
     Ok(())
   }
